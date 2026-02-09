@@ -1,0 +1,51 @@
+def run_direct_model_silence(date_simul_bg,z_bottom, dz, nb_zone, alt_thk, REF_k, REF_n, REF_l, REF_r, REF_k2=None, REF_n2=None, REF_l2=None, REF_r2=None):
+    """
+        Run the direct model simulation and process the output temperature data.
+        Parameters:
+        date_simul_bg (str): The start date of the simulation in a string format.
+        z_bottom (float): The bottom depth of the simulation zone.
+        dz (float): The depth increment for each zone.
+        nb_zone (int): The number of zones in the simulation.
+        alt_thk (float): The thickness of the alteration zone.
+        REF_k (float): Reference parameter k for the simulation.
+        REF_n (float): Reference parameter n for the simulation.
+        REF_l (float): Reference parameter l for the simulation.
+        REF_r (float): Reference parameter r for the simulation.
+        REF_k2 (float, optional): Secondary reference parameter k for the simulation. Defaults to None.
+        REF_n2 (float, optional): Secondary reference parameter n for the simulation. Defaults to None.
+        REF_l2 (float, optional): Secondary reference parameter l for the simulation. Defaults to None.
+        REF_r2 (float, optional): Secondary reference parameter r for the simulation. Defaults to None.
+        Returns:
+        pd.DataFrame: A DataFrame containing the simulation time, temperatures, and corresponding dates.
+        Notes:
+        - This function generates zone parameters and runs the 'ginette' simulation.
+        - It reads the output temperature data from files and merges them into a single DataFrame.
+        - The resulting DataFrame includes a 'dates' column calculated from the simulation start date and time.
+    """
+
+
+    generate_zone_parameters(z_bottom, dz, nb_zone, alt_thk, REF_k, REF_n, REF_l, REF_r, REF_k2, REF_n2, REF_l2, REF_r2)
+
+    # run ginette
+    subprocess.call(["./ginette"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    # Colonnes pour les températures
+    column_names = ['Temp_1', 'Temp_2', 'Temp_3']
+
+    # Liste pour stocker les DataFrames
+    all_dfs = []
+    # Lire et stocker les DataFrames
+    for i in range(1, 4):
+        file_path = f'Sim_temperature_maille{i}_t.dat'
+        df = pd.read_csv(file_path, sep='\s+', header=None, names=['Time', f'Temp{i}'])
+        all_dfs.append(df)
+
+    # Fusionner les DataFrames sur la colonne 'Time'
+    sim_temp = all_dfs[0]  # Utiliser le premier DataFrame comme base
+    for df in all_dfs[1:]:
+        sim_temp = sim_temp.merge(df, on='Time')
+    
+      # Ajouter une colonne de dates en utilisant la date de début de simulation
+    date_simul_bg = pd.to_datetime(date_simul_bg)
+    sim_temp['dates'] = date_simul_bg + pd.to_timedelta(sim_temp['Time'], unit='s')
+
+    return sim_temp
