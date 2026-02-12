@@ -14,3 +14,4 @@ Thumbs*
 *.csv
 SYNTHETIC_CASES
 OBS_point
+field_data/donnee_*/*.txt
