@@ -156,18 +156,20 @@ def plot_compare_temperatures_obs_sim(sim_temp, obs_temp,fontsize=15):
     - obs_temp: DataFrame containing the observed temperatures. Must contain a 'dates' column and temperature columns named 'Temp1', 'Temp2', 'Temp3', etc.
     - fontsize: Font size for the labels (default is 15).
     """
+    sim_temp_plot = sim_temp.copy()
+    obs_temp_plot = obs_temp.copy()
     zoomSize = 2
     titleSize = fontsize + zoomSize
     fig, axes = plt.subplots(1, 3, figsize=(20, 5), sharey=True)
 
     # Assurez-vous que les dates sont alignées
-    sim_temp['dates'] = pd.to_datetime(sim_temp['dates'])
-    obs_temp['dates'] = pd.to_datetime(obs_temp['dates'])
-    sim_temp.set_index('dates', inplace=True)
-    obs_temp.set_index('dates', inplace=True)
+    sim_temp_plot['dates'] = pd.to_datetime(sim_temp_plot['dates'])
+    obs_temp_plot['dates'] = pd.to_datetime(obs_temp_plot['dates'])
+    sim_temp_plot.set_index('dates', inplace=True)
+    obs_temp_plot.set_index('dates', inplace=True)
 
     # Fusionner les DataFrames pour s'assurer qu'ils ont la même taille
-    merged_df = pd.merge(sim_temp, obs_temp, left_index=True, right_index=True, suffixes=('_sim', '_obs'))
+    merged_df = pd.merge(sim_temp_plot, obs_temp_plot, left_index=True, right_index=True, suffixes=('_sim', '_obs'))
 
     # Colonnes de température (en supposant qu'elles soient nommées 'Temp1', 'Temp2', 'Temp3')
     temp_columns = ['Temp1', 'Temp2', 'Temp3']
